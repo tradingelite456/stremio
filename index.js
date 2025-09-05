@@ -1,12 +1,12 @@
 const { addonBuilder } = require("stremio-addon-sdk");
 
-// --- Mapping IDs -> flux ---
+// --- Mapping IMDb IDs -> flux M3U8 ---
 const streams = {
     "tt0133093": [
-        { title: "Serveur 1", url: "https://exemple.com/flux/matrix.m3u8" }
+        { title: "Serveur 1", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
     ],
     "tt0944947:1:1": [
-        { title: "GoT S01E01 - Serveur 1", url: "https://exemple.com/flux/got-s01e01.m3u8" }
+        { title: "GoT S01E01", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
     ]
 };
 
@@ -21,28 +21,29 @@ const manifest = {
     idPrefixes: ["tt"]
 };
 
-// --- Builder ---
 const builder = new addonBuilder(manifest);
 
 builder.defineStreamHandler(({ id }) => {
     return Promise.resolve({ streams: streams[id] || [] });
 });
 
-// --- Export spécial pour Vercel ---
-module.exports = (req, res) => {
-    const { pathname, query } = require("url").parse(req.url, true);
+// --- Interface Stremio ---
+const addonInterface = builder.getInterface();
 
-    // route /manifest.json
-    if (pathname === "/manifest.json") {
-        res.setHeader("Content-Type", "application/json");
+// --- Export Vercel handler ---
+module.exports = (req, res) => {
+    // On force Content-Type = JSON
+    res.setHeader("Content-Type", "application/json");
+
+    // Parse la requête de Stremio
+    const url = req.url;
+
+    if (url === "/manifest.json") {
         res.end(JSON.stringify(manifest));
-    }
-    // route /stream
-    else if (pathname.startsWith("/stream")) {
-        builder.getInterface()(req, res);
-    }
-    else {
+    } else if (url.startsWith("/stream")) {
+        return addonInterface(req, res);
+    } else {
         res.statusCode = 404;
-        res.end("Not found");
+        res.end(JSON.stringify({ error: "Not found" }));
     }
 };
