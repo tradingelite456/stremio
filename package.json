@@ -1,8 +1,11 @@
 {
-  "name": "mon-addon-stremio",
+  "name": "stremio-hls-addon",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
     "stremio-addon-sdk": "^1.6.3"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
