@@ -1,3 +1,8 @@
+res.setHeader("Access-Control-Allow-Origin", "*");
+res.setHeader("Access-Control-Allow-Headers", "*");
+res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+
 const { addonBuilder } = require("stremio-addon-sdk");
 const manifest = require("./manifest.json");
 
