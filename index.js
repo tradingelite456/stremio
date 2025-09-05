@@ -1,22 +1,16 @@
 const { addonBuilder } = require("stremio-addon-sdk");
 
-// --- Associe tes IDs IMDb aux flux M3U8 ---
+// --- Mapping IDs -> flux ---
 const streams = {
-    "tt0133093": [  // Matrix
-        {
-            title: "Serveur 1",
-            url: "https://exemple.com/flux/matrix.m3u8"
-        }
+    "tt0133093": [
+        { title: "Serveur 1", url: "https://exemple.com/flux/matrix.m3u8" }
     ],
-    "tt0944947:1:1": [ // Game of Thrones S01E01
-        {
-            title: "Episode 1 - Serveur 1",
-            url: "https://exemple.com/flux/got-s01e01.m3u8"
-        }
+    "tt0944947:1:1": [
+        { title: "GoT S01E01 - Serveur 1", url: "https://exemple.com/flux/got-s01e01.m3u8" }
     ]
 };
 
-// --- Manifest de ton addon ---
+// --- Manifest ---
 const manifest = {
     id: "org.monavon.addon",
     version: "1.0.0",
@@ -27,16 +21,28 @@ const manifest = {
     idPrefixes: ["tt"]
 };
 
-// --- Implémentation ---
+// --- Builder ---
 const builder = new addonBuilder(manifest);
 
-builder.defineStreamHandler((args) => {
-    const id = args.id;
-    const response = streams[id] || [];
-    return Promise.resolve({ streams: response });
+builder.defineStreamHandler(({ id }) => {
+    return Promise.resolve({ streams: streams[id] || [] });
 });
 
-// Export pour Vercel
+// --- Export spécial pour Vercel ---
 module.exports = (req, res) => {
-    builder.getInterface()(req, res);
+    const { pathname, query } = require("url").parse(req.url, true);
+
+    // route /manifest.json
+    if (pathname === "/manifest.json") {
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(manifest));
+    }
+    // route /stream
+    else if (pathname.startsWith("/stream")) {
+        builder.getInterface()(req, res);
+    }
+    else {
+        res.statusCode = 404;
+        res.end("Not found");
+    }
 };
